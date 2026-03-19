@@ -3,27 +3,19 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
-from sentence_transformers import SentenceTransformer
+from langchain_huggingface import HuggingFaceEmbeddings
 
 # ---------------- UI ----------------
 st.set_page_config(page_title="RAG Chatbot", layout="wide")
 st.title("📄 Free AI Document Chatbot (RAG)")
 
-# ---------------- MODEL ----------------
-model = SentenceTransformer("all-MiniLM-L6-v2")
-
-# ---------------- EMBEDDING WRAPPER ----------------
-class EmbeddingsWrapper:
-    def embed_documents(self, texts):
-        return model.encode(texts).tolist()
-
-    def embed_query(self, text):
-        return model.encode([text])[0].tolist()
-
-embeddings = EmbeddingsWrapper()
+# ---------------- EMBEDDINGS ----------------
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
 
 # ---------------- FILE UPLOAD ----------------
-uploaded_file = st.file_uploader("Upload PDF or TXT", type=["pdf", "txt"])
+uploaded_file = st.file_uploader("Upload PDF or TXT file", type=["pdf", "txt"])
 
 if uploaded_file:
 
@@ -47,20 +39,20 @@ if uploaded_file:
     # ---------------- VECTOR DB ----------------
     db = FAISS.from_documents(texts, embeddings)
 
-    st.success("✅ File processed successfully!")
+    st.success("✅ Document processed successfully!")
 
     # ---------------- QUERY ----------------
     query = st.text_input("Ask a question from your document:")
 
     if query:
 
-        # SEARCH
+        # SEARCH SIMILAR DOCS
         docs = db.similarity_search(query, k=3)
 
-        # CONTEXT
+        # BUILD CONTEXT
         context = "\n".join([d.page_content for d in docs])
 
-        # SIMPLE ANSWER GENERATION
+        # SIMPLE ANSWER (NO API NEEDED)
         answer = f"""
 📌 Answer based on your document:
 
