@@ -13,16 +13,11 @@ st.title("📄 Free AI Document Chatbot (RAG)")
 # ----------------------------
 # LOCAL EMBEDDING MODEL
 # ----------------------------
-model = SentenceTransformer('all-MiniLM-L6-v2')
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
-class LocalEmbeddings:
-    def embed_documents(self, texts):
-        return model.encode(texts).tolist()
-
-    def embed_query(self, text):
-        return model.encode([text])[0].tolist()
-
-embeddings = LocalEmbeddings()
+embeddings = HuggingFaceEmbeddings(
+    model_name="all-MiniLM-L6-v2"
+)
 
 # ----------------------------
 # SIMPLE CACHE FOR DB
