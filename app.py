@@ -9,7 +9,10 @@ from langchain_core.documents import Document
 st.title("📄 AI Document Chatbot (RAG)")
 
 # Get API key
-api_key = os.getenv("OPENAI_API_KEY")
+import os
+
+api_key = os.environ.get("OPENAI_API_KEY")
+st.write("API Key Loaded:", api_key is not None)
 
 if not api_key:
     st.error("❌ API key not found. Add it in Streamlit Secrets.")
