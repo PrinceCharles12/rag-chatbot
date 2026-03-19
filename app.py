@@ -4,7 +4,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
-from langchain.schema import Document
+from langchain_core.documents import Document
 
 st.title("📄 AI Document Chatbot (RAG)")
 
