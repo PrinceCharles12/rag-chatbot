@@ -41,10 +41,9 @@ else:
         retriever = db.as_retriever()
         query = st.text_input("Ask a question from your document:")
 
-if query:
-    docs = retriever.get_relevant_documents(query)
-    
-    context = " ".join([doc.page_content for doc in docs])
+        if query:
+            docs = retriever.get_relevant_documents(query)
+            context = " ".join([doc.page_content for doc in docs])
     
     prompt = f"Answer the question based on the context below:\n\nContext:\n{context}\n\nQuestion:\n{query}"
     
