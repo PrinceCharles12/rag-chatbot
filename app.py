@@ -13,6 +13,7 @@ import os
 
 api_key = os.environ.get("OPENAI_API_KEY")
 st.write("API Key Loaded:", api_key is not None)
+st.write("API KEY:", api_key)
 
 if not api_key:
     st.error("❌ API key not found. Add it in Streamlit Secrets.")
