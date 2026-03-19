@@ -39,6 +39,7 @@ else:
 
         # RAG Chain
         retriever = db.as_retriever()
+        query = st.text_input("Ask a question from your document:")
 
 if query:
     docs = retriever.get_relevant_documents(query)
