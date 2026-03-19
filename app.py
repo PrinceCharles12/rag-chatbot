@@ -13,17 +13,25 @@ api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     st.error("❌ API key not found. Add it in Streamlit Secrets.")
 else:
-    uploaded_file = st.file_uploader("Upload a file", type=["pdf", "txt"])
+   uploaded_file = st.file_uploader("Upload a file", type=["pdf", "txt"])
 
-    if uploaded_file:
-        # PDF case
-        if uploaded_file.type == "application/pdf":
-            with open("temp.pdf", "wb") as f:
-                f.write(uploaded_file.read())
-                
-            from langchain_community.document_loaders import PyPDFLoader
-            loader = PyPDFLoader("temp.pdf")
-            documents = loader.load()
+   if uploaded_file:
+       file_name = uploaded_file.name
+       # PDF case
+       if file_name.endswith(".pdf"):
+           with open("temp.pdf", "wb") as f:
+               f.write(uploaded_file.read())
+
+           from langchain_community.document_loaders import PyPDFLoader
+           loader = PyPDFLoader("temp.pdf")
+           documents = loader.load()
+
+    # TXT case
+    elif file_name.endswith(".txt"):
+        text = uploaded_file.read().decode("utf-8")
+
+        from langchain.schema import Document
+        documents = [Document(page_content=text)]
 
     # TXT case
     elif uploaded_file.type == "text/plain":
