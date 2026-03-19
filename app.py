@@ -81,7 +81,7 @@ if uploaded_file:
 
     if query:
 
-        docs = retriever.get_relevant_documents(query)
+        docs = retriever.invoke(query)
         context = "\n".join([d.page_content for d in docs])
 
         prompt = f"""
