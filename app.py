@@ -3,8 +3,6 @@ import os
 from langchain_openai import ChatOpenAI
 
 st.title("📄 AI Document Chatbot")
-
-# Get API key from secrets
 api_key = os.getenv("OPENAI_API_KEY")
 
 if not api_key:
