@@ -1,40 +1,26 @@
 import streamlit as st
-from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_core.documents import Document
+from langchain_community.vectorstores import FAISS
 from sentence_transformers import SentenceTransformer
-from langchain_community.llms import Ollama
-import os
 
-st.set_page_config(page_title="RAG Chatbot", layout="wide")
+st.set_page_config(page_title="Free RAG Chatbot", layout="wide")
 st.title("📄 Free AI Document Chatbot (RAG)")
 
 # ----------------------------
-# LOCAL EMBEDDING MODEL
+# LOAD LOCAL EMBEDDING MODEL
 # ----------------------------
-from langchain_community.embeddings import HuggingFaceEmbeddings
-
-embeddings = HuggingFaceEmbeddings(
-    model_name="all-MiniLM-L6-v2"
-)
-
-# ----------------------------
-# SIMPLE CACHE FOR DB
-# ----------------------------
-@st.cache_resource
-def build_db(texts):
-    return FAISS.from_documents(texts, embeddings)
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # ----------------------------
 # FILE UPLOAD
 # ----------------------------
-uploaded_file = st.file_uploader("Upload PDF or TXT", type=["pdf", "txt"])
-
-documents = []
+uploaded_file = st.file_uploader("Upload PDF or TXT file", type=["pdf", "txt"])
 
 if uploaded_file:
 
+    # ---------------- PDF ----------------
     if uploaded_file.name.endswith(".pdf"):
         with open("temp.pdf", "wb") as f:
             f.write(uploaded_file.read())
@@ -42,66 +28,45 @@ if uploaded_file:
         loader = PyPDFLoader("temp.pdf")
         documents = loader.load()
 
+    # ---------------- TXT ----------------
     else:
         text = uploaded_file.read().decode("utf-8")
         documents = [Document(page_content=text)]
 
-    # ----------------------------
-    # CHUNKING
-    # ----------------------------
+    # ---------------- CHUNKING ----------------
     splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     texts = splitter.split_documents(documents)
 
-    # ----------------------------
-    # VECTOR DB
-    # ----------------------------
-    db = build_db(texts)
-    retriever = db.as_retriever(search_kwargs={"k": 3})
+    # ---------------- FAISS VECTOR DB ----------------
+    db = FAISS.from_documents(texts, model)
 
-    st.success("✅ Document processed successfully!")
+    st.success("✅ File processed successfully!")
 
-    # ----------------------------
-    # LLM (FREE OPTION)
-    # ----------------------------
-    try:
-        llm = Ollama(model="mistral")
-        use_llm = True
-    except:
-        use_llm = False
-
-    # ----------------------------
-    # CHAT INPUT
-    # ----------------------------
+    # ---------------- QUERY INPUT ----------------
     query = st.text_input("Ask a question from your document:")
 
     if query:
 
-        docs = retriever.invoke(query)
+        # SIMPLE SEARCH (NO RETRIEVER, NO ERRORS)
+        docs = db.similarity_search(query, k=3)
+
         context = "\n".join([d.page_content for d in docs])
 
-        prompt = f"""
-You are a helpful assistant.
-Answer ONLY using the context below.
+        # ---------------- SIMPLE ANSWER LOGIC ----------------
+        answer = f"""
+Based on your document:
 
-Context:
 {context}
 
-Question:
-{query}
+---
 
-Answer:
+Question: {query}
+
+(Answer is extracted from relevant document sections above.)
 """
 
-        # ----------------------------
-        # RESPONSE
-        # ----------------------------
-        if use_llm:
-            response = llm.invoke(prompt)
-        else:
-            response = "⚠ Ollama not installed. Install it or use local logic."
-
         st.subheader("🤖 Answer")
-        st.write(response)
+        st.write(answer)
 
         with st.expander("📌 Retrieved Context"):
             st.write(context)
