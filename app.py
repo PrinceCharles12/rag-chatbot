@@ -39,14 +39,25 @@ else:
 
         # RAG Chain
         retriever = db.as_retriever()
+        # Input
         query = st.text_input("Ask a question from your document:")
-
         if query:
+            # Get relevant docs
             docs = retriever.get_relevant_documents(query)
+            # Create context
             context = " ".join([doc.page_content for doc in docs])
     
-    prompt = f"Answer the question based on the context below:\n\nContext:\n{context}\n\nQuestion:\n{query}"
+            # Create prompt
+            prompt = f"""Answer the question based on the context below:
+
+        Context:
+        {context}
+
+        Question:
+        {query}
+        """
+
+            # Get response
+            response = llm.predict(prompt)
     
-    response = llm.predict(prompt)
-    
-    st.write("🤖 Answer:", response)
+            st.write("🤖 Answer:", response)
