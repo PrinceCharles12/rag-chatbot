@@ -4,7 +4,6 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
-from langchain.chains import RetrievalQA
 
 st.title("📄 AI Document Chatbot (RAG)")
 
@@ -39,10 +38,15 @@ else:
         llm = ChatOpenAI(openai_api_key=api_key)
 
         # RAG Chain
-        qa = RetrievalQA.from_chain_type(llm=llm, retriever=db.as_retriever())
+        retriever = db.as_retriever()
 
-        query = st.text_input("Ask a question from your document:")
-
-        if query:
-            answer = qa.run(query)
-            st.write("🤖 Answer:", answer)
+if query:
+    docs = retriever.get_relevant_documents(query)
+    
+    context = " ".join([doc.page_content for doc in docs])
+    
+    prompt = f"Answer the question based on the context below:\n\nContext:\n{context}\n\nQuestion:\n{query}"
+    
+    response = llm.predict(prompt)
+    
+    st.write("🤖 Answer:", response)
