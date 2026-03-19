@@ -16,21 +16,21 @@ else:
     uploaded_file = st.file_uploader("Upload a file", type=["pdf", "txt"])
 
     if uploaded_file:
-        # If PDF
+        # PDF case
         if uploaded_file.type == "application/pdf":
             with open("temp.pdf", "wb") as f:
                 f.write(uploaded_file.read())
-
+                
             from langchain_community.document_loaders import PyPDFLoader
             loader = PyPDFLoader("temp.pdf")
             documents = loader.load()
 
-         # If TXT
-         elif uploaded_file.type == "text/plain":
-             text = uploaded_file.read().decode("utf-8")
-        
-             from langchain.schema import Document
-             documents = [Document(page_content=text)]
+    # TXT case
+    elif uploaded_file.type == "text/plain":
+        text = uploaded_file.read().decode("utf-8")
+
+        from langchain.schema import Document
+        documents = [Document(page_content=text)]
 
         # Load PDF
         loader = PyPDFLoader("temp.pdf")
