@@ -5,18 +5,25 @@ from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from sentence_transformers import SentenceTransformer
 
-st.set_page_config(page_title="Free RAG Chatbot", layout="wide")
+# ---------------- UI ----------------
+st.set_page_config(page_title="RAG Chatbot", layout="wide")
 st.title("📄 Free AI Document Chatbot (RAG)")
 
-# ----------------------------
-# LOAD LOCAL EMBEDDING MODEL
-# ----------------------------
+# ---------------- MODEL ----------------
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# ----------------------------
-# FILE UPLOAD
-# ----------------------------
-uploaded_file = st.file_uploader("Upload PDF or TXT file", type=["pdf", "txt"])
+# ---------------- EMBEDDING WRAPPER ----------------
+class EmbeddingsWrapper:
+    def embed_documents(self, texts):
+        return model.encode(texts).tolist()
+
+    def embed_query(self, text):
+        return model.encode([text])[0].tolist()
+
+embeddings = EmbeddingsWrapper()
+
+# ---------------- FILE UPLOAD ----------------
+uploaded_file = st.file_uploader("Upload PDF or TXT", type=["pdf", "txt"])
 
 if uploaded_file:
 
@@ -37,36 +44,35 @@ if uploaded_file:
     splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     texts = splitter.split_documents(documents)
 
-    # ---------------- FAISS VECTOR DB ----------------
-    db = FAISS.from_documents(texts, model)
+    # ---------------- VECTOR DB ----------------
+    db = FAISS.from_documents(texts, embeddings)
 
     st.success("✅ File processed successfully!")
 
-    # ---------------- QUERY INPUT ----------------
+    # ---------------- QUERY ----------------
     query = st.text_input("Ask a question from your document:")
 
     if query:
 
-        # SIMPLE SEARCH (NO RETRIEVER, NO ERRORS)
+        # SEARCH
         docs = db.similarity_search(query, k=3)
 
+        # CONTEXT
         context = "\n".join([d.page_content for d in docs])
 
-        # ---------------- SIMPLE ANSWER LOGIC ----------------
+        # SIMPLE ANSWER GENERATION
         answer = f"""
-Based on your document:
+📌 Answer based on your document:
 
 {context}
 
 ---
 
-Question: {query}
-
-(Answer is extracted from relevant document sections above.)
+❓ Question: {query}
 """
 
         st.subheader("🤖 Answer")
         st.write(answer)
 
-        with st.expander("📌 Retrieved Context"):
+        with st.expander("📄 Retrieved Context"):
             st.write(context)
